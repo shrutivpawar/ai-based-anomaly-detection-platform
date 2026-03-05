@@ -63,3 +63,74 @@ Install dependencies
 ```
 pip install -r requirements.txt
 ```
+Running the Platform:
+To view the project locally, open separate terminals in VS Code and run these components in order:
+
+Start Zookeeper:
+```
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+```
+
+Start Kafka Broker:
+```
+$env:KAFKA_HEAP_OPTS = "-Xmx1G -Xms1G"; .\bin\windows\kafka-server-start.bat .\config\server.properties
+```
+Start Data Producer:
+```
+python scripts/start_producer.py
+```
+
+Start ML Consumer (Data Processor & DB Logger):
+```
+python scripts/streaming_consumer_ml.py
+```
+
+Start Flask Web Server:
+```
+python app/app.py
+```
+
+Access the Dashboard: Open your browser and go to http://127.0.0.1:5000
+
+### 4. 📊 Project Structure
+```
+├── app/
+│   ├── static/          # Chart.js and Dashboard logic
+│   ├── templates/       # index.html (Dashboard UI)
+│   └── app.py           # Flask API & DB Connector
+├── models/              # Trained Autoencoder (.keras) and Scaler (.pkl)
+├── scripts/
+│   ├── start_producer.py        # Generates synthetic patient data
+│   └── streaming_consumer_ml.py # AI Inference & Postgres Logging
+├── notebooks/           # Model training and EDA (.ipynb)
+└── requirements.txt     # List of required Python libraries
+```
+requirements.txt file:
+```
+# Web Framework & API
+flask==3.0.0
+flask-cors==4.0.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# Streaming
+kafka-python==2.0.2
+
+# Machine Learning & Data Processing
+tensorflow==2.15.0
+scikit-learn==1.3.2
+pandas==2.1.4
+numpy==1.26.2
+joblib==1.3.2
+
+# Utilities
+python-dotenv==1.0.0
+```
+
+### 5. 🛡️ Troubleshooting
+Postgres Connection: If you encounter an SSL error, ensure the connection string in app.py and streaming_consumer_ml.py includes sslmode=disable.
+
+Kafka WMIC Error: If the Kafka server fails to start with a 'wmic' error, add C:\Windows\System32\wbem to your System Environment Path variables.
+
+Empty Table: Verify that the Producer and Consumer are both running; the database will only populate when an anomaly is detected and processed.
