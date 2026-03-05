@@ -28,6 +28,8 @@ Ensure you have the following installed on your local machine:
 * [Apache Kafka](https://kafka.apache.org/downloads)
 * [PostgreSQL & pgAdmin 4](https://www.postgresql.org/download/)
 
+---
+
 ### 2. Database Configuration
 Open **pgAdmin 4**, connect to your server, and run the following SQL script to initialize the table:
 
@@ -45,6 +47,8 @@ CREATE TABLE anomaly_logs (
     diastolic_bp DOUBLE PRECISION
 );
 ```
+---
+
 ### 3. Environment Setup
 Clone the repository and set up a virtual environment in your terminal:
 
@@ -92,6 +96,8 @@ python app/app.py
 
 Access the Dashboard: Open your browser and go to http://127.0.0.1:5000
 
+---
+
 ### 4. 📊 Project Structure
 ```
 AI-BASED-ANOMALY/
@@ -115,6 +121,8 @@ AI-BASED-ANOMALY/
 ├── streaming_consumer_ml.py # Kafka Consumer (AI Inference & Postgres Logger)
 └── validate.py             # Script to verify system components
 ```
+---
+
 requirements.txt file:
 ```
 # Web Framework & API
@@ -137,6 +145,7 @@ joblib==1.3.2
 # Utilities
 python-dotenv==1.0.0
 ```
+---
 
 ### 5. 🛡️ Troubleshooting
 Postgres Connection: If you encounter an SSL error, ensure the connection string in app.py and streaming_consumer_ml.py includes sslmode=disable.
