@@ -94,16 +94,26 @@ Access the Dashboard: Open your browser and go to http://127.0.0.1:5000
 
 ### 4. 📊 Project Structure
 ```
+AI-BASED-ANOMALY/
 ├── app/
-│   ├── static/          # Chart.js and Dashboard logic
-│   ├── templates/       # index.html (Dashboard UI)
-│   └── app.py           # Flask API & DB Connector
-├── models/              # Trained Autoencoder (.keras) and Scaler (.pkl)
+│   ├── templates/          # HTML files for the dashboard UI
+│   └── app.py              # Flask application (API & Web Server)
+├── data/
+│   └── human_vital_signs_dataset_2024.csv  # Raw dataset for training/testing
+├── models/                 # Saved Machine Learning artifacts
+│   ├── autoencoder.keras   # Trained Deep Learning model
+│   ├── isolation_forest.pkl # Trained Statistical ML model
+│   ├── scaler.pkl          # Data normalization parameters
+│   └── train_model.py      # Script to train and export models
+├── notebooks/
+│   └── EDA_and_Preprocessing.ipynb  # Data exploration & sequence creation
 ├── scripts/
-│   ├── start_producer.py        # Generates synthetic patient data
-│   └── streaming_consumer_ml.py # AI Inference & Postgres Logging
-├── notebooks/           # Model training and EDA (.ipynb)
-└── requirements.txt     # List of required Python libraries
+│   └── start_producer.py   # Kafka Producer (Simulates real-time vitals)
+├── venv/                   # Python Virtual Environment (Local only)
+├── .gitignore              # Files to exclude from GitHub (venv, logs, etc.)
+├── requirements.txt        # Project dependencies and libraries
+├── streaming_consumer_ml.py # Kafka Consumer (AI Inference & Postgres Logger)
+└── validate.py             # Script to verify system components
 ```
 requirements.txt file:
 ```
