@@ -45,3 +45,21 @@ CREATE TABLE anomaly_logs (
     diastolic_bp DOUBLE PRECISION
 );
 ```
+### 3. Environment Setup
+Clone the repository and set up a virtual environment in your terminal:
+
+```
+git clone [https://github.com/shrutivpawar/ai-based-anomaly-detection-platform.git](https://github.com/shrutivpawar/ai-based-anomaly-detection-platform.git)
+cd ai-based-anomaly-detection-platform
+```
+
+Create and activate virtual environment
+```
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+Install dependencies
+```
+pip install -r requirements.txt
+```
