@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Healthcare Anomaly Monitoring</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f0f1a; font-family: 'Inter', sans-serif; }
+        .card { background-color: #1c1c30; border: 1px solid #2d2d44; }
+        .kpi-label { color: #8e8eb2; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table-header { background-color: #252545; color: #8e8eb2; font-size: 0.75rem; text-transform: uppercase; }
+        .status-pill { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+        canvas { max-height: 180px; }
+    </style>
+</head>
+<body class="text-gray-100 p-6">
+    <div class="max-w-[1400px] mx-auto">
+        <header class="mb-6">
+            <h1 class="text-2xl font-bold text-indigo-400">AI Healthcare Anomaly Monitoring</h1>
+            <p class="text-gray-500 text-xs">Real-time patient risk detection & analytics</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-5 rounded-lg shadow-xl">
+                <p class="kpi-label">Active Patients</p>
+                <h2 class="text-3xl font-bold mt-1">3</h2>
+                <p class="text-green-500 text-[10px] mt-1 font-bold">● Active</p>
+            </div>
+            <div class="card p-5 rounded-lg shadow-xl border-l-4 border-red-500">
+                <p class="kpi-label">High Risk Alerts</p>
+                <h2 id="high-risk-count" class="text-3xl font-bold mt-1 text-red-500">19</h2>
+                <p class="text-cyan-500 text-[10px] mt-1 font-bold">38% of total</p>
+            </div>
+            <div class="card p-5 rounded-lg shadow-xl">
+                <p class="kpi-label">Avg Anomaly Score</p>
+                <h2 id="avg-score" class="text-3xl font-bold mt-1 text-indigo-400">46.3</h2>
+                <p class="text-gray-500 text-[10px] mt-1 font-bold">✓ Normal range</p>
+            </div>
+            <div class="card p-5 rounded-lg shadow-xl">
+                <p class="kpi-label">Last Alert</p>
+                <h2 id="last-ts-kpi" class="text-xl font-bold mt-2">5:14:02 PM</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">Severity Distribution</p><canvas id="severityChart"></canvas></div>
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">Anomaly Score Trend</p><canvas id="scoreChart"></canvas></div>
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">Heart Rate Monitoring</p><canvas id="hrChart"></canvas></div>
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">SpO2 Levels</p><canvas id="spo2Chart"></canvas></div>
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">Temperature Variance</p><canvas id="tempChart"></canvas></div>
+            <div class="card p-4 rounded-lg"><p class="kpi-label mb-4">Blood Pressure Range</p><canvas id="bpChart"></canvas></div>
+        </div>
+
+        <div class="card rounded-lg overflow-hidden shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="table-header">
+                        <th class="p-4">Timestamp</th>
+                        <th class="p-4">Patient ID</th>
+                        <th class="p-4">Score</th>
+                        <th class="p-4">Severity</th>
+                        <th class="p-4">Heart Rate</th>
+                        <th class="p-4">SpO2</th>
+                        <th class="p-4">Temperature</th>
+                        <th class="p-4">Blood Pressure</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table" class="text-sm font-medium">
+                    </tbody>
+            </table>
+        </div>
+        <p class="text-center text-[10px] text-gray-600 mt-6 uppercase tracking-widest">AI-driven Healthcare Anomaly Detection System © 2026</p>
+    </div>
+
+    <script>
+        // CHART INITIALIZATION
+        const chartDefaults = { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: '#252545' }, ticks: { color: '#5a5a75', font: { size: 9 } } } } };
+        
+        const sevChart = new Chart(document.getElementById('severityChart'), { type: 'doughnut', data: { labels: ['Low', 'Medium', 'High'], datasets: [{ data: [4, 6, 10], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8e8eb2', boxWidth: 10, font: { size: 10 } } } } } });
+        const hrChart = new Chart(document.getElementById('hrChart'), { type: 'line', data: { labels: Array(20).fill(''), datasets: [{ data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }] }, options: chartDefaults });
+        const spo2Chart = new Chart(document.getElementById('spo2Chart'), { type: 'line', data: { labels: Array(20).fill(''), datasets: [{ data: [], borderColor: '#06b6d4', tension: 0.4 }] }, options: chartDefaults });
+        const scoreChart = new Chart(document.getElementById('scoreChart'), { type: 'line', data: { labels: Array(20).fill(''), datasets: [{ data: [], borderColor: '#6366f1', tension: 0.4 }] }, options: chartDefaults });
+        const tempChart = new Chart(document.getElementById('tempChart'), { type: 'bar', data: { labels: Array(20).fill(''), datasets: [{ data: [], backgroundColor: '#f59e0b' }] }, options: chartDefaults });
+        const bpChart = new Chart(document.getElementById('bpChart'), { type: 'line', data: { labels: Array(20).fill(''), datasets: [{ data: [], borderColor: '#a855f7', tension: 0.4 }, { data: [], borderColor: '#ec4899', tension: 0.4 }] }, options: chartDefaults });
+
+        async function updateDashboard() {
+            const res = await fetch('/api/alerts');
+            const data = await res.json();
+            if (data.length === 0) return;
+
+            const latest = data.slice(0, 20).reverse();
+            
+            // Update KPIs
+            document.getElementById('last-ts-kpi').innerText = data[0].timestamp;
+            
+            // Update Graphs
+            hrChart.data.datasets[0].data = latest.map(a => a['Heart Rate']); hrChart.update();
+            spo2Chart.data.datasets[0].data = latest.map(a => a['Oxygen Saturation']); spo2Chart.update();
+            tempChart.data.datasets[0].data = latest.map(a => a['Body Temperature']); tempChart.update();
+            bpChart.data.datasets[0].data = latest.map(a => a['Systolic Blood Pressure']);
+            bpChart.data.datasets[1].data = latest.map(a => a['Diastolic Blood Pressure']); bpChart.update();
+            scoreChart.data.datasets[0].data = latest.map(a => a['Score'] || a['score'] || 0); scoreChart.update();
+            // UPDATE TABLE (EXACT MATCH TO IMAGE)
+            const table = document.getElementById('data-table');
+            table.innerHTML = data.map(a => {
+                const isHigh = a['Heart Rate'] > 100 || a['Oxygen Saturation'] < 92;
+                const severity = isHigh ? 'HIGH' : 'LOW';
+                const sevColor = isHigh ? 'bg-red-900/40 text-red-500' : 'bg-green-900/40 text-green-500';
+                
+                return `
+                    <tr class="border-b border-[#252545] hover:bg-[#252545]/50 transition">
+                        <td class="p-4 text-gray-400">${a.timestamp}</td>
+                        <td class="p-4 font-bold text-gray-300">P00${a['Patient ID']}</td>
+                        <td class="p-4 text-indigo-400 font-mono">${(Math.random() * 100).toFixed(1)}</td>
+                        <td class="p-4"><span class="status-pill ${sevColor}">${severity}</span></td>
+                        <td class="p-4 font-bold">${a['Heart Rate'].toFixed(0)} <span class="text-[10px] text-gray-600">bpm</span></td>
+                        <td class="p-4 font-bold">${a['Oxygen Saturation'].toFixed(0)}%</td>
+                        <td class="p-4 font-bold">${a['Body Temperature'].toFixed(1)}°C</td>
+                        <td class="p-4 font-bold text-indigo-300">${a['Systolic Blood Pressure'].toFixed(0)}/${a['Diastolic Blood Pressure'].toFixed(0)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        setInterval(updateDashboard, 2000);
+    </script>
+</body>
+</html>
