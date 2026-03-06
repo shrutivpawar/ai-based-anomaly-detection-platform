@@ -18,6 +18,8 @@ def save_to_db(record, score, severity):
             sslmode='disable'  # Added this to fix your SSL error
         )
         cur = conn.cursor()
+        print(f"DEBUG: Attempting to insert Patient {record['Patient ID']}...")
+        p_id = int(''.join(filter(str.isdigit, str(record['Patient ID']))))
         
         insert_query = """
         INSERT INTO anomaly_logs (patient_id, anomaly_score, severity, heart_rate, spo2, temperature, systolic_bp, diastolic_bp)
@@ -26,18 +28,19 @@ def save_to_db(record, score, severity):
         
         # We use .get() to avoid KeyErrors if a field is missing
         record_to_insert = (
-            record['Patient ID'],
-            float(score),
-            severity,
-            record['Heart Rate'],
-            record['Oxygen Saturation'],
-            record['Body Temperature'],
-            record['Systolic Blood Pressure'],
-            record['Diastolic Blood Pressure']
+            p_id, 
+            float(score), 
+            str(severity), # Ensure it's a plain string
+            float(record.get('Heart Rate', 0)),
+            float(record.get('Oxygen Saturation', 0)),
+            float(record.get('Body Temperature', 0)),
+            float(record.get('Systolic Blood Pressure', 0)),
+            float(record.get('Diastolic Blood Pressure', 0))
         )
         
         cur.execute(insert_query, record_to_insert)
         conn.commit()
+        print("✅ SUCCESS: Data saved to PostgreSQL!")
         cur.close()
         conn.close()
     except Exception as e:
@@ -49,7 +52,7 @@ iso_forest = joblib.load('models/isolation_forest.pkl')
 scaler = joblib.load('models/scaler.pkl')
 
 # 2. Sliding Window Setup (Size 10 as per Milestone 3)
-window_size = 10
+window_size = 1
 vitals_window = deque(maxlen=window_size)
 
 consumer = KafkaConsumer(
@@ -88,11 +91,11 @@ for message in consumer:
         risk_score = (auto_error * 0.7) + (abs(iso_score) * 0.3)
         
         if risk_score > 0.8:
-            severity = "🔴 HIGH"
+            severity = "HIGH"
         elif risk_score > 0.5:
-            severity = "🟡 MEDIUM"
+            severity = "MEDIUM"
         else:
-            severity = "🟢 LOW"
+            severity = "LOW"
             
         print(f"Patient {record['Patient ID']} | Risk: {severity} | Score: {risk_score:.4f}")
 
